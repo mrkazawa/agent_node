@@ -32,56 +32,75 @@ vagrant destroy -f # to completely delete VM
 
 ## How to run ##
 
-Before move further, [Notary nodes](https://github.com/mrkazawa/notary_node) has to be run first.
+Before moving further, please note that [Notary nodes](https://github.com/mrkazawa/notary_node) has to be run first.
 
 ### Running Agent #1 (Car Owner) ###
 
-After we SSH to the respective VM , `agent1`.
 Based on our the use case in the paper, the car owner does two things:
 
 - Store his rental car detail information in the `Storage Engine`.
 - Store his rental car metadata information in the `Compute Engine`.
 
+After we SSH to the respective VM , `agent1`, run these steps:
+
 #### 1. Run the Storage Engine ####
 
-```bash
-npm run build
-```
-
-#### 2. Generate private swarm key and distribute the key to other nodes ####
-
-***Run ONLY on the boot node.***
-
-```bash
-npm run distribute-keys
-```
-
-#### 3. Add boostraping to points to `notary1` as a bootnode ####
-
-***Run this on all nodes.***
-
-```bash
-npm run add-boot-node
-```
-
-#### 4. Start the IPFS swarm node ####
-
-***Run this on all nodes.***
+First of all, lets install all required softwares and create the IPFS instance.
 
 ```bash
 cd ~/src/storage
 npm install # installing all the dependencies
-
-npm run start # to start IPFS daemon
+npm run build # initiate IPFS
 ```
 
-#### 5. Test, stop, and destroy IPFS ####
+Get the swarm key from the boot node.
+Run the following command in `notary1` terminal.
 
 ```bash
+cat ~/.ipfs/swarm.key
+```
+
+This will output something like this
+
+```bash
+/key/swarm/psk/1.0.0/
+/base16/
+deb1aeca7acd63417d6ba13d6d8c8f894bd2d18f5dc67892214397372f562b5d
+```
+
+Copy the contents and create the same file in `agent1`.
+
+```bash
+touch ~/.ipfs/swarm.key
+nano ~/.ipfs/swarm.key
+# now paste the same contents from notary 1 swarm.key to this file
+# Ctrl + X and then Y, to save and exit
+```
+
+Get the Peer ID of the IPFS boot node.
+Run the following command in `notary1` terminal.
+
+```bash
+IPFS_PATH=~/.ipfs ipfs config show | grep "PeerID" | cut -d ":" -f2 | grep -o '".*"' | sed 's/"//g'
+```
+
+Copy the output, back to `agent1` terminal, and replace `$your_boot_node_peer_id` with the output
+
+```bash
+# configure IPFS to connect to boot node
+chmod +x ./add_boot_ipfs.sh && ./add_boot_ipfs.sh $your_boot_node_peer_id
+
+npm run start # to start IPFS daemon
 npm test # if all is working correctly, the test should pass
 
 npm run stop # to stop IPFS daemon
-npm run destroy # to destroy IPFS
+npm run destroy # to destroy IPFS instance
+```
+
+#### 2. Run the Compute Engine ####
+
+
+
 
 
 

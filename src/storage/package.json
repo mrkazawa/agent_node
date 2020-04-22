@@ -1,0 +1,37 @@
+{
+  "name": "storage",
+  "version": "1.0.0",
+  "description": "Storage Engine: IPFS Implementation for Agent Node",
+  "main": "ipfs_engine.js",
+  "scripts": {
+    "build": "chmod +x ./build_ipfs.sh && ./build_ipfs.sh",
+    "start": "chmod +x ./start_ipfs.sh && ./start_ipfs.sh",
+    "stop": "chmod +x ./stop_ipfs.sh && ./stop_ipfs.sh",
+    "destroy": "chmod +x ./destroy_ipfs.sh && ./destroy_ipfs.sh",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkazawa/agent_node.git"
+  },
+  "keywords": [
+    "agent-node",
+    "storage-engine",
+    "ipfs"
+  ],
+  "author": "Yustus Oktian",
+  "license": "ISC",
+  "dependencies": {
+    "ipfs-http-client": "^40.1.0",
+    "is-ipfs": "^0.6.1"
+  },
+  "devDependencies": {
+    "jest": "^25.4.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}
