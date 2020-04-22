@@ -68,7 +68,7 @@ This will output something like this
 deb1aeca7acd63417d6ba13d6d8c8f894bd2d18f5dc67892214397372f562b5d
 ```
 
-Copy the contents and create the same file in `agent1`.
+Copy the contents and create the same file in `agent1` terminal.
 
 ```bash
 touch ~/.ipfs/swarm.key
