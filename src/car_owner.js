@@ -12,7 +12,7 @@ const RENT_FEE = 1;
 
 // storage params
 const CAR_DATA_PATH = '/home/vagrant/src/car_data.json';
-var carDataTemplate = {
+const carDataTemplate = {
   timestamp: Math.floor(new Date() / 1000), // get current timestmap in epoch
   manufacturer: "Hyundai",
   model: "M15",
@@ -25,16 +25,10 @@ var carDataTemplate = {
 };
 
 // performance params
-const RESULT_DATA_PATH = '/home/vagrant/result.csv';
-
-// initialize checkpoints for performance module
-let startDetailCheckpoint = 0;
-let endDetailCheckpoint = 0;
-let startMetadataCheckpoint = 0;
-let endMetadataCheckpoint = 0;
+const RESULT_DATA_PATH = '/home/vagrant/result_car_owner.csv';
 
 async function storingCarDetail() {
-  startDetailCheckpoint = performance.now();
+  const startDetailCheckpoint = performance.now();
 
   console.log("Car owner preparing car data...");
   const json = JSON.stringify(carDataTemplate);
@@ -51,17 +45,21 @@ async function storingCarDetail() {
     return process.exit(69);
   }
 
-  endDetailCheckpoint = performance.now();
+  const endDetailCheckpoint = performance.now();
+  savingResult('Storing Car Detail in IPFS', startDetailCheckpoint, endDetailCheckpoint);
 }
 
 /**
- * Appending checkpoint delta results to file.
+ * Appending delta of performance.now() checkpoint to file.
+ * 
+ * @param {string} scenario   The scenario description of this delta
+ * @param {number} start      The start point of performance.now()
+ * @param {number} end        The end point of performance.now()
  */
-function savingResult() {
-  const detailDelta = endDetailCheckpoint - startDetailCheckpoint;
-  const metadataDelta = endMetadataCheckpoint - startMetadataCheckpoint;
-  const row = detailDelta + "," +
-    metadataDelta + "," +
+function savingResult(scenario, start, end) {
+  const delta = end - start;
+  const row = scenario + "," +
+    delta + "," +
     "\r\n";
   fs.appendFileSync(RESULT_DATA_PATH, row);
 }
@@ -83,4 +81,3 @@ function createRandomIotaTag() {
 }
 
 storingCarDetail();
-savingResult()
