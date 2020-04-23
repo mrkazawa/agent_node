@@ -2,8 +2,9 @@ const fs = require('fs');
 const {
   performance
 } = require('perf_hooks');
+const rp = require('request-promise-native');
 
-const ipfs_engine = require('./storage/ipfs_engine');
+const ipfs_engine = require('../storage/ipfs_engine');
 
 // payment params
 const RECIPIENT_ADDRESS = 'OPWZTSFCTVNDYXFLCAJPOQAONK9THEHWZPDT9JMRPHXSJNXNM9PXARVBDUM9YTDG9YRYEPNJNIFZRWNZCZWDWBEGWY';
@@ -24,20 +25,26 @@ const carDataTemplate = {
   paymentFee: RENT_FEE,
 };
 
+// compute params
+const CONTRACT_ABI_URL = `http://notary1.local:3002/contract_abi`;
+
+const CONTRACT_CREDS_PATH = '/home/vagrant/src/compute/contract_credentials.json';
+const OWNER_CREDS_PATH = '/home/vagrant/src/compute/car_owner_credentials.json';
+
 // performance params
 const RESULT_DATA_PATH = '/home/vagrant/result_car_owner.csv';
 
 async function storingCarDetail() {
   const startDetailCheckpoint = performance.now();
 
-  console.log("Car owner preparing car data...");
+  console.log("Preparing car data...");
   const json = JSON.stringify(carDataTemplate);
   fs.writeFileSync(CAR_DATA_PATH, json, {
     encoding: 'utf8',
     flag: 'w'
   });
 
-  console.log("Car owner storing car data in IPFS...");
+  console.log("Storing car data in IPFS...");
   const ipfsHash = await ipfs_engine.storeJsonFromLocalFile(CAR_DATA_PATH);
   if (ipfs_engine.isValidIpfsHash(ipfsHash)) {
     console.log(`Car data stored in: ${ipfsHash}`);
@@ -47,6 +54,52 @@ async function storingCarDetail() {
 
   const endDetailCheckpoint = performance.now();
   savingResult('Storing Car Detail in IPFS', startDetailCheckpoint, endDetailCheckpoint);
+}
+
+async function storingCarMetadata() {
+  let options = {
+    method: 'GET',
+    uri: CONTRACT_ABI_URL,
+    resolveWithFullResponse: true,
+    json: true
+  };
+
+  rp(options).then(function (response) {
+    console.log("Constructing smart contract...");
+    const contractAbi = response.body;
+    const json = readJsonFile(CONTRACT_CREDS_PATH);
+    
+    console.log(contractAbi);
+    console.log(json);
+
+
+    /*const carRental = eth_engine.constructSmartContract(contractAbi, contractAddress);
+
+    console.log("Car owner storing rental car to the smart contract...");
+    const carOwnerAddress = eth_engine.getEthereumAddressFromJsonFile(OWNER_DATA_PATH);
+    const ipfsHashInBytes = eth_engine.getBytes32FromIpfsHash(ipfsHash);
+    let tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
+      from: carOwnerAddress,
+      gas: 1000000
+    });*/
+
+  }).catch(function (err) {
+    console.log(`Error when getting contract abi: ${err}`);
+  });
+}
+
+/**
+ * Get JSON file from given path.
+ * 
+ * @param {string} path     The path to the JSON file
+ */
+function readJsonFile(path) {
+  if (fs.existsSync(path)) {
+    const rawdata = fs.readFileSync(path);
+    return JSON.parse(rawdata);
+  } else {
+    throw new Error(`${path} does not exist`);
+  }
 }
 
 /**
@@ -80,4 +133,9 @@ function createRandomIotaTag() {
   return result;
 }
 
-storingCarDetail();
+async function main() {
+  await storingCarDetail();
+  await storingCarMetadata();
+}
+
+main();
