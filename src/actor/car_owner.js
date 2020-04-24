@@ -4,7 +4,8 @@ const {
 } = require('perf_hooks');
 const rp = require('request-promise-native');
 
-const ipfs_engine = require('../storage/ipfs_engine');
+const storageEngine = require('../storage/ipfs_engine');
+const computeEngine = require('../compute/ethereum_engine');
 
 // payment params
 const RECIPIENT_ADDRESS = 'OPWZTSFCTVNDYXFLCAJPOQAONK9THEHWZPDT9JMRPHXSJNXNM9PXARVBDUM9YTDG9YRYEPNJNIFZRWNZCZWDWBEGWY';
@@ -33,6 +34,9 @@ const OWNER_CREDS_PATH = '/home/vagrant/src/compute/car_owner_credentials.json';
 
 // performance params
 const RESULT_DATA_PATH = '/home/vagrant/result_car_owner.csv';
+fs.writeFileSync(RESULT_DATA_PATH, ""); // clear file
+
+let ipfsHash; // the ipfs hash for the car information
 
 async function storingCarDetail() {
   const startDetailCheckpoint = performance.now();
@@ -45,8 +49,8 @@ async function storingCarDetail() {
   });
 
   console.log("Storing car data in IPFS...");
-  const ipfsHash = await ipfs_engine.storeJsonFromLocalFile(CAR_DATA_PATH);
-  if (ipfs_engine.isValidIpfsHash(ipfsHash)) {
+  ipfsHash = await storageEngine.storeJsonFromLocalFile(CAR_DATA_PATH);
+  if (storageEngine.isValidIpfsHash(ipfsHash)) {
     console.log(`Car data stored in: ${ipfsHash}`);
   } else {
     return process.exit(69);
@@ -57,6 +61,8 @@ async function storingCarDetail() {
 }
 
 async function storingCarMetadata() {
+  const startMetadataCheckpoint = performance.now();
+
   let options = {
     method: 'GET',
     uri: CONTRACT_ABI_URL,
@@ -64,24 +70,48 @@ async function storingCarMetadata() {
     json: true
   };
 
-  rp(options).then(function (response) {
-    console.log("Constructing smart contract...");
-    const contractAbi = response.body;
-    const json = readJsonFile(CONTRACT_CREDS_PATH);
-    
-    console.log(contractAbi);
-    console.log(json);
+  rp(options).then(async function (response) {
+    try {
+      console.log("Constructing smart contract...");
+      const rawAbi = response.body;
 
+      let json = readJsonFile(CONTRACT_CREDS_PATH);
+      const contractAddress = computeEngine.convertToChecksumAddress(json.address);
 
-    /*const carRental = eth_engine.constructSmartContract(contractAbi, contractAddress);
+      const carRental = computeEngine.constructSmartContract(rawAbi.abi, contractAddress);
+      /*carRental.events.NewRentalCarAdded({
+        fromBlock: 0
+      }, function (error, event) {
+        if (error) console.log(error);
+        console.log(event.returnValues['carOwner']);
+      })*/
 
-    console.log("Car owner storing rental car to the smart contract...");
-    const carOwnerAddress = eth_engine.getEthereumAddressFromJsonFile(OWNER_DATA_PATH);
-    const ipfsHashInBytes = eth_engine.getBytes32FromIpfsHash(ipfsHash);
-    let tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
-      from: carOwnerAddress,
-      gas: 1000000
-    });*/
+      console.log("Storing car metadata to the smart contract...");
+      json = readJsonFile(OWNER_CREDS_PATH);
+
+      const ipfsHashInBytes = computeEngine.getBytes32FromIpfsHash(ipfsHash);
+      let tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
+        from: json.address,
+        gas: 1000000
+      });
+
+      const event = tx.events.NewRentalCarAdded; 
+      if (typeof event !== 'undefined') {
+        console.log('Tx stored in the block!');
+        console.log('Car Owner: ', event.returnValues['carOwner']);
+        console.log('Car Hash: ', event.returnValues['ipfsHash']);
+
+        const endMetadataCheckpoint = performance.now();
+        savingResult('Storing Car Metadata in ETH', startMetadataCheckpoint, endMetadataCheckpoint);
+        process.exit();
+
+      } else {
+        console.log('ERROR! Tx not stored!');
+      }
+
+    } catch (err) {
+      console.log(`Error setting up contract: ${err}`);
+    }
 
   }).catch(function (err) {
     console.log(`Error when getting contract abi: ${err}`);

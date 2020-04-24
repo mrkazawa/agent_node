@@ -4,7 +4,9 @@
   "description": "Actors implementation: car owner, car renter, and car backend",
   "main": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "car-owner": "node car_owner",
+    "car-renter": "node car_renter",
+    "car-backend": "node car_backend"
   },
   "repository": {
     "type": "git",

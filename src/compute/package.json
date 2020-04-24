@@ -1,0 +1,21 @@
+{
+  "name": "compute",
+  "version": "1.0.0",
+  "description": "Compute Engine: Ethereum implementation for agent node",
+  "main": "ethereum_engine.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkazawa/notary_node.git"
+  },
+  "keywords": [
+    "agent-node",
+    "compute-engine",
+    "ethereum"
+  ],
+  "author": "Yustus Oktian",
+  "license": "ISC",
+  "dependencies": {
+    "bs58": "^4.0.1",
+    "web3": "^1.2.4"
+  }
+}
