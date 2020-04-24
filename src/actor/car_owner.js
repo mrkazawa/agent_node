@@ -13,7 +13,7 @@ const TAG = createRandomIotaTag();
 const RENT_FEE = 1;
 
 // storage params
-const CAR_DATA_PATH = '/home/vagrant/src/car_data.json';
+const CAR_DATA_PATH = '/home/vagrant/src/storage/car_data.json';
 const carDataTemplate = {
   timestamp: Math.floor(new Date() / 1000), // get current timestmap in epoch
   manufacturer: "Hyundai",
@@ -28,8 +28,7 @@ const carDataTemplate = {
 
 // compute params
 const CONTRACT_ABI_URL = `http://notary1.local:3002/contract_abi`;
-
-const CONTRACT_CREDS_PATH = '/home/vagrant/src/compute/contract_credentials.json';
+const NETWORK_ID = '2020';
 const OWNER_CREDS_PATH = '/home/vagrant/src/compute/car_owner_credentials.json';
 
 // performance params
@@ -75,19 +74,10 @@ async function storingCarMetadata() {
       console.log("Constructing smart contract...");
       const rawAbi = response.body;
 
-      let json = readJsonFile(CONTRACT_CREDS_PATH);
-      const contractAddress = computeEngine.convertToChecksumAddress(json.address);
-
-      const carRental = computeEngine.constructSmartContract(rawAbi.abi, contractAddress);
-      /*carRental.events.NewRentalCarAdded({
-        fromBlock: 0
-      }, function (error, event) {
-        if (error) console.log(error);
-        console.log(event.returnValues['carOwner']);
-      })*/
+      const carRental = computeEngine.constructSmartContract(rawAbi.abi, rawAbi.networks[NETWORK_ID].address);
 
       console.log("Storing car metadata to the smart contract...");
-      json = readJsonFile(OWNER_CREDS_PATH);
+      let json = readJsonFile(OWNER_CREDS_PATH);
 
       const ipfsHashInBytes = computeEngine.getBytes32FromIpfsHash(ipfsHash);
       let tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
