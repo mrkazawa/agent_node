@@ -12,6 +12,12 @@ const RECIPIENT_ADDRESS = 'OPWZTSFCTVNDYXFLCAJPOQAONK9THEHWZPDT9JMRPHXSJNXNM9PXA
 const TAG = createRandomIotaTag();
 const RENT_FEE = 1;
 
+// compute params
+const CONTRACT_ABI_URL = `http://notary1.local:3002/contract_abi`;
+const NETWORK_ID = '2020';
+const OWNER_CREDS_PATH = '/home/vagrant/src/compute/car_owner_credentials.json';
+const OWNER_ADDRESS = computeEngine.convertToChecksumAddress(readJsonFile(OWNER_CREDS_PATH).address);
+
 // storage params
 const CAR_DATA_PATH = '/home/vagrant/src/storage/car_data.json';
 const carDataTemplate = {
@@ -24,12 +30,8 @@ const carDataTemplate = {
   paymentAddress: RECIPIENT_ADDRESS,
   paymentTag: TAG,
   paymentFee: RENT_FEE,
+  owner: OWNER_ADDRESS
 };
-
-// compute params
-const CONTRACT_ABI_URL = `http://notary1.local:3002/contract_abi`;
-const NETWORK_ID = '2020';
-const OWNER_CREDS_PATH = '/home/vagrant/src/compute/car_owner_credentials.json';
 
 // performance params
 const RESULT_DATA_PATH = '/home/vagrant/result_car_owner.csv';
@@ -77,11 +79,10 @@ async function storingCarMetadata() {
       const carRental = computeEngine.constructSmartContract(rawAbi.abi, rawAbi.networks[NETWORK_ID].address);
 
       console.log("Storing car metadata to the smart contract...");
-      let json = readJsonFile(OWNER_CREDS_PATH);
 
       const ipfsHashInBytes = computeEngine.getBytes32FromIpfsHash(ipfsHash);
       let tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
-        from: json.address,
+        from: OWNER_ADDRESS,
         gas: 1000000
       });
 
