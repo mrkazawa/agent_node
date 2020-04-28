@@ -30,27 +30,16 @@ vagrant destroy -f # to completely delete VM
 
 - - - -
 
-## How to run ##
+## Running the Engines ##
 
-Before moving further, please note that [Notary nodes](https://github.com/mrkazawa/notary_node) has to be run first.
-
-### Running Agent #1 (Car Owner) ###
-
-Based on our the use case in the paper, the car owner does two things:
-
-- Store his rental car detail information in the `Storage Engine`.
-- Store his rental car metadata information in the `Compute Engine`.
-
-After we SSH to the respective VM , `agent1`, run these steps:
-
-#### 1. Run the Storage Engine ####
+### 1. Run the Storage Engine ###
 
 First of all, lets install all required softwares and create the IPFS instance.
 
 ```bash
-cd ~/src/storage
+cd ~/src
 npm install # installing all the dependencies
-npm run build # initiate IPFS
+npm run ipfs-build # initiate IPFS
 ```
 
 Get the swarm key from the boot node.
@@ -87,22 +76,24 @@ IPFS_PATH=~/.ipfs ipfs config show | grep "PeerID" | cut -d ":" -f2 | grep -o '"
 Copy the output, back to `agent1` terminal, and replace `$your_boot_node_peer_id` with the output
 
 ```bash
+cd ~/src
 # configure IPFS to connect to boot node
-chmod +x ./add_boot_ipfs.sh && ./add_boot_ipfs.sh $your_boot_node_peer_id
+chmod +x ./storage/add_boot_ipfs.sh && ./storage/add_boot_ipfs.sh $your_boot_node_peer_id
 
-npm run start # to start IPFS daemon
+npm run ipfs-start # to start IPFS daemon
 npm test # if all is working correctly, the test should pass
 
-npm run stop # to stop IPFS daemon
-npm run destroy # to destroy IPFS instance
+npm run ipfs-stop # to stop IPFS daemon
+npm run ipfs-destroy # to destroy IPFS instance
 ```
 
-#### 2. Run the Compute Engine ####
+### 2. Run the Compute Engine ###
 
+Basically, you do not need to configure anything.
+You can, however, change the location of the compute network by modifying the `web3.js` in `src/compute/web3.js`.
+Make sure it refer to the desired compute network.
 
-
-
-
+### 3. Run the Payment Engine ###
 
 - - - -
 

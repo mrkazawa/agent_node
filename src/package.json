@@ -1,0 +1,44 @@
+{
+  "name": "agent-node",
+  "version": "0.1.0",
+  "description": "Agent node implementation",
+  "main": "index.js",
+  "scripts": {
+    "car-owner": "node ./actor/car_owner",
+    "car-renter": "node ./actor/car_renter",
+    "car-backend": "node ./actor/car_backend",
+    "ipfs-build": "chmod +x ./storage/build_ipfs.sh && ./storage/build_ipfs.sh",
+    "ipfs-start": "chmod +x ./storage/start_ipfs.sh && ./storage/start_ipfs.sh",
+    "ipfs-stop": "chmod +x ./storage/stop_ipfs.sh && ./storage/stop_ipfs.sh",
+    "ipfs-destroy": "chmod +x ./storage/destroy_ipfs.sh && ./storage/destroy_ipfs.sh",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkazawa/agent_node.git"
+  },
+  "keywords": [
+    "agent-node",
+    "blockchain",
+    "iot"
+  ],
+  "author": "Yustus Oktian",
+  "license": "ISC",
+  "dependencies": {
+    "bs58": "^4.0.1",
+    "ipfs-http-client": "^40.1.0",
+    "is-ipfs": "^0.6.1",
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.8",
+    "web3": "^1.2.4"
+  },
+  "devDependencies": {
+    "jest": "^25.4.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}
