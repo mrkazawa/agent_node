@@ -1,5 +1,6 @@
 const Iota = require('@iota/core');
 const Converter = require('@iota/converter');
+const Extract = require('@iota/extract-json');
 
 // specify the location of the IRI node
 const iota = Iota.composeAPI({
@@ -47,14 +48,14 @@ var iota_engine = {
     try {
       return await iota.getNodeInfo();
     } catch (err) {
-      console.log(`Error when getting node info: ${err.message}`);
+      console.log(`Error when getting node info: ${err}`);
     }
   },
 
   convertAsciiToTrytes: function (message) {
     return Converter.asciiToTrytes(message);
   },
-  
+
   sendTx: async function (transfers) {
     try {
       const trytes = await iota.prepareTransfers(SEED, transfers);
@@ -66,6 +67,60 @@ var iota_engine = {
       console.log(`Error when sending Tx: ${err}`);
     }
   },
+
+  readTxMessage: async function (tailTxHash) {
+    try {
+      const bundle = await iota.getBundle(tailTxHash);
+      return JSON.parse(Extract.extractJson(bundle));
+    } catch (err) {
+      console.log(`Error when reading Tx: ${err}`);
+    }
+  },
+
+  generateAddress: async function () {
+    try {
+      return await iota.getNewAddress(SEED, {
+        index: 0,
+        securityLevel: SECURITY_LEVEL,
+        total: 1
+      });
+    } catch (err) {
+      console.log(`Error when generating new address: ${err}`);
+    }
+  },
+
+  isTxVerified: async function (tailTxHash) {
+    try {
+      return await iota.getLatestInclusion([tailTxHash]);
+    } catch (err) {
+      console.log(`Error when checking tx: ${err}`);
+    }
+  },
+
+  getBalances: async function (address) {
+    try {
+      const balance = await iota.getBalances([address], 100);
+      return parseInt(balance.balances);
+    } catch (err) {
+      console.log(`Error when checking balances: ${err}`);
+    }
+  },
+
+  getAccountData: async function () {
+    try {
+      return await iota.getAccountData(SEED, {
+        start: 0,
+        securityLevel: SECURITY_LEVEL
+      });
+    } catch (err) {
+      console.log(`Error when checking account data: ${err}`);
+    }
+  },
+
+
+
+
+
 
   /**
    * Get the current balance for given address in the Tangle (IOTA Network).
