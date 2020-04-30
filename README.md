@@ -95,6 +95,28 @@ Make sure it refer to the desired compute network.
 
 ### 3. Run the Payment Engine ###
 
+First of all, clone and install IRI.
+
+```bash
+cd ~/src
+chmod +x ./payment/1_install_iri.sh && ./payment/1_install_iri.sh
+```
+
+Open a terminal in the `notary1` node, then run this command to get the Coordinator address.
+
+```bash
+cat ~/compass/docs/private_tangle/data/layers/layer.0.csv
+```
+
+Back to the `agent` terminal.
+Copy the previous output and paste it as a parameter of `$your_coo_address` in the command below.
+
+```bash
+cd ~/src
+# configure IRI to connect to other IRI with the same COO
+chmod +x ./payment/2_run_iri.sh && ./payment/2_run_iri.sh $your_coo_address
+```
+
 - - - -
 
 ## Known Issues ##

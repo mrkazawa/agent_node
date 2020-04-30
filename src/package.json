@@ -7,8 +7,6 @@
     "car-owner": "node ./actor/car_owner",
     "car-renter": "node ./actor/car_renter",
     "car-backend": "node ./actor/car_backend",
-    "iota-build": "chmod +x ./payment/1_install_iri.sh && ./payment/1_install_iri.sh",
-    "iota-start": "chmod +x ./payment/2_run_iri.sh && ./payment/2_run_iri.sh",
     "ipfs-build": "chmod +x ./storage/build_ipfs.sh && ./storage/build_ipfs.sh",
     "ipfs-start": "chmod +x ./storage/start_ipfs.sh && ./storage/start_ipfs.sh",
     "ipfs-stop": "chmod +x ./storage/stop_ipfs.sh && ./storage/stop_ipfs.sh",

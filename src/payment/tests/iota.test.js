@@ -1,6 +1,7 @@
 const paymentEngine = require('../iota_engine');
 
 const address = 'HEQLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWOR99D';
+jest.setTimeout(240000);
 
 test('Getting node info', async () => {
   const nodeIndo = await paymentEngine.getNodeInfo();
@@ -36,6 +37,13 @@ test('Generating new address', async () => {
   expect(address).toBeTruthy();
 });
 
+test('Attach an address to tangle', async () => {
+  const address = await paymentEngine.generateAddress();
+
+  const tailTxHash = await paymentEngine.attachToTangle(address[0]);
+  expect(tailTxHash).toBeTruthy();
+});
+
 test('Sending iota in a transaction', async () => {
   const transfers = [{
     value: 1,
@@ -43,6 +51,22 @@ test('Sending iota in a transaction', async () => {
     tag: paymentEngine.createRandomIotaTag()
   }];
 
+  const beforeBalance = await paymentEngine.getBalances(address);
+  expect(beforeBalance).toBeTruthy();
+
   const tailTxHash = await paymentEngine.sendTx(transfers);
   expect(tailTxHash).toBeTruthy();
+
+  while (true) {
+    // waiting until the payment is verified
+    // it can take 60 seconds, depending on the `tick` parameter in
+    // the COO node.
+
+    const confirmed = await paymentEngine.isTxVerified(tailTxHash);
+    if (confirmed[0]) {
+      const afterBalance = await paymentEngine.getBalances(address);
+      expect(afterBalance).toEqual(beforeBalance + transfers[0].value);
+      break;
+    }
+  }
 });
