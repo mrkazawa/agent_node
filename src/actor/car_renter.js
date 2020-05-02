@@ -1,12 +1,11 @@
-const fs = require('fs');
 const http = require('http');
 const {
   performance
 } = require('perf_hooks');
-const axios = require('axios').default;
 
 const computeEngine = require('../compute/ethereum_engine');
 const paymentEngine = require('../payment/iota_engine');
+const tools = require('./tools');
 
 const NOTARY_BASE_URL = 'http://notary2.local:3002';
 const PAYMENT_INFO_URL = NOTARY_BASE_URL + '/tx_hash';
@@ -16,21 +15,15 @@ const CONTRACT_ABI_URL = NOTARY_BASE_URL + '/contract_abi';
 // compute params
 const NETWORK_ID = '2020';
 const RENTER_CREDS_PATH = '/home/vagrant/src/compute/car_renter_credentials.json';
-const RENTER_ADDRESS = computeEngine.convertToChecksumAddress(readJsonFile(RENTER_CREDS_PATH).address);
+const RENTER_ADDRESS = computeEngine.convertToChecksumAddress(tools.readJsonFIle(RENTER_CREDS_PATH).address);
 
 // performance params
 const RESULT_DATA_PATH = '/home/vagrant/result_car_renter.csv';
-fs.writeFileSync(RESULT_DATA_PATH, ""); // clear file
-
-// global temporary car information
-let ipfsHash;
-let feeAmount;
-let feeAddress;
-let feeTag;
+tools.clearFIle(RESULT_DATA_PATH);
 
 async function getCarInfo() {
   console.log('Getting Car Info From Rental Car App..');
-  const startGetCarInfo = performance.now();
+  const start = performance.now();
 
   const options = {
     method: 'get',
@@ -40,49 +33,51 @@ async function getCarInfo() {
     })
   };
 
-  const response = await sendRequest(options);
+  const response = await tools.sendRequest(options);
   if (response instanceof Error) {
-    processError(response);
+    tools.logAndExit(response);
   }
 
-  ipfsHash = response.data.hash;
-  feeAmount = response.data.fee_amount;
-  feeAddress = response.data.fee_address;
-  feeTag = response.data.fee_tag;
+  const end = performance.now();
+  tools.savingResult('Get Car Info From App', RESULT_DATA_PATH, start, end);
+  console.log(`${response.data.hash} car info obtained!`);
 
-  const endGetCarInfo = performance.now();
-  savingResult('Get Car Info From App', startGetCarInfo, endGetCarInfo);
-  console.log(`${ipfsHash} car info obtained!`);
+  return [
+    response.data.hash,
+    response.data.fee_amount,
+    response.data.fee_address,
+    response.data.fee_tag
+  ];
 }
 
-async function sendPayment() {
+async function sendPayment(carInfo) {
   console.log('Paying Car to IOTA..');
-  const startSendPayment = performance.now();
+  const start = performance.now();
 
   const transfers = [{
-    value: feeAmount,
-    address: feeAddress,
-    tag: feeTag
+    value: carInfo[1],
+    address: carInfo[2],
+    tag: carInfo[3]
   }];
 
   const tailTxHash = await paymentEngine.sendTx(transfers);
   if (tailTxHash instanceof Error) {
-    processError(tailTxHash);
+    tools.logAndExit(tailTxHash);
   }
 
-  const endSendPayment = performance.now();
-  savingResult('Send Payment to IOTA', startSendPayment, endSendPayment);
+  const end = performance.now();
+  tools.savingResult('Send Payment to IOTA', RESULT_DATA_PATH, start, end);
   console.log(`${tailTxHash} tx hash obtained!`);
 
   return tailTxHash;
 }
 
-async function sendTxHash(tailTxHash) {
+async function sendTxHash(carInfo, tailTxHash) {
   console.log('Sending Car Payment Hash to App..');
-  const startSendHash = performance.now();
+  const start = performance.now();
 
   const payload = {
-    car_hash: ipfsHash,
+    car_hash: carInfo[0],
     payment_hash: tailTxHash,
     renter_address: RENTER_ADDRESS
   };
@@ -96,61 +91,19 @@ async function sendTxHash(tailTxHash) {
     })
   };
 
-  const response = await sendRequest(options);
+  const response = await tools.sendRequest(options);
   if (response instanceof Error) {
-    processError(response);
+    tools.logAndExit(response);
   }
 
-  const endSendHash = performance.now();
-  savingResult('Send Tx Hash to App', startSendHash, endSendHash);
+  const end = performance.now();
+  tools.savingResult('Send Tx Hash to App', RESULT_DATA_PATH, start, end);
   console.log(`${tailTxHash} is sent to Rental Car application`);
 }
 
-async function sendRequest(options) {
-  try {
-    return await axios(options);
-  } catch (err) {
-    return new Error(`Error sending request ${err}`);
-  }
-}
-
-function processError(error) {
-  console.log(error);
-  process.exit(69);
-}
-
-/**
- * Get JSON file from given path.
- * 
- * @param {string} path     The path to the JSON file
- */
-function readJsonFile(path) {
-  if (fs.existsSync(path)) {
-    const rawdata = fs.readFileSync(path);
-    return JSON.parse(rawdata);
-  } else {
-    throw new Error(`${path} does not exist`);
-  }
-}
-
-/**
- * Appending delta of performance.now() checkpoint to file.
- * 
- * @param {string} scenario   The scenario description of this delta
- * @param {number} start      The start point of performance.now()
- * @param {number} end        The end point of performance.now()
- */
-function savingResult(scenario, start, end) {
-  const delta = end - start;
-  const row = scenario + "," +
-    delta + "," +
-    "\r\n";
-  fs.appendFileSync(RESULT_DATA_PATH, row);
-}
-
 async function main() {
-  await getCarInfo();
-  const tailTxHash = await sendPayment();
+  const carInfo = await getCarInfo();
+  const tailTxHash = await sendPayment(carInfo);
 
   while (true) {
     // waiting until the payment is verified
@@ -158,11 +111,11 @@ async function main() {
     // the COO node.
     const confirmed = await paymentEngine.isTxVerified(tailTxHash);
     if (confirmed instanceof Error) {
-      processError(confirmed);
+      tools.logAndExit(confirmed);
     }
 
     if (confirmed) {
-      await sendTxHash(tailTxHash);
+      await sendTxHash(carInfo, tailTxHash);
       break;
     }
   }
