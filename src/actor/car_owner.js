@@ -29,7 +29,7 @@ const RESULT_DATA_PATH = '/home/vagrant/result_car_owner.csv';
 tools.clearFIle(RESULT_DATA_PATH);
 
 async function storingCarDetail() {
-  console.log("Storing car data in IPFS...");
+  console.log("Storing car data in IPFS..");
   const start = performance.now();
 
   const carDataTemplate = {
@@ -61,7 +61,7 @@ async function storingCarDetail() {
 }
 
 async function storingCarMetadata(ipfsHash) {
-  console.log("Storing car metadaat in Ethereum...");
+  console.log("Storing car metadaat in Ethereum..");
   const start = performance.now();
 
   let options = {
@@ -81,7 +81,7 @@ async function storingCarMetadata(ipfsHash) {
     const rawAbi = response.data;
     const carRental = computeEngine.constructSmartContract(rawAbi.abi, rawAbi.networks[NETWORK_ID].address);
 
-    const ipfsHashInBytes = computeEngine.getBytes32FromIpfsHash(ipfsHash);
+    const ipfsHashInBytes = computeEngine.convertIpfsHashToBytes32(ipfsHash);
     const tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
       from: OWNER_ADDRESS,
       gas: 1000000
