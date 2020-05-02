@@ -26,19 +26,21 @@ Vagrant.configure("2") do |config|
     end
   end
 
- # Installation (WARNING! the order matters)
- config.vm.provision "shell", path: "shell/base_install.sh", privileged: true
- config.vm.provision "shell", path: "shell/color_prompt.sh", privileged: false
- config.vm.provision "docker"
+  config.ssh.compression = false
+  config.ssh.keep_alive = true
 
- config.vm.provision "shell", path: "shell/go_install.sh", privileged: true
- config.vm.provision "shell", path: "shell/ipfs_install.sh", privileged: true
+  # Installation (WARNING! the order matters)
+  config.vm.provision "shell", path: "shell/base_install.sh", privileged: true
+  config.vm.provision "shell", path: "shell/color_prompt.sh", privileged: false
+  config.vm.provision "docker"
 
- #config.vm.provision "shell", path: "shell/bazel_install.sh", privileged: false
- #config.vm.provision "shell", path: "shell/conda_install.sh", privileged: false
+  config.vm.provision "shell", path: "shell/go_install.sh", privileged: true
+  config.vm.provision "shell", path: "shell/ipfs_install.sh", privileged: true
 
- config.vm.provision "shell", path: "shell/nvm_install.sh", privileged: false
+  #config.vm.provision "shell", path: "shell/bazel_install.sh", privileged: false
+  #config.vm.provision "shell", path: "shell/conda_install.sh", privileged: false
 
+  config.vm.provision "shell", path: "shell/nvm_install.sh", privileged: false
 
   # shared folders setup using RSYNC
   config.vm.synced_folder "src/", "/home/vagrant/src", type: "rsync", rsync__exclude: [".vscode/", ".git/", "node_modules/"]
