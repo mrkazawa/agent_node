@@ -61,7 +61,7 @@ async function storingCarDetail() {
 }
 
 async function storingCarMetadata(ipfsHash) {
-  console.log("Storing car metadaat in Ethereum..");
+  console.log("Storing car metadata in Ethereum..");
   const start = performance.now();
 
   let options = {
@@ -92,13 +92,24 @@ async function storingCarMetadata(ipfsHash) {
       const end = performance.now();
       tools.savingResult('Storing Car Metadata in ETH', RESULT_DATA_PATH, start, end);
 
-      console.log('Tx stored in the block!');
+      console.log('Insert Rental Car Tx stored in the block!');
       console.log('Car Owner: ', event.returnValues['carOwner']);
       console.log('Car Hash: ', event.returnValues['ipfsHash']);
 
     } else {
       console.log('Fail, not getting any event?');
     }
+
+    carRental.events.RentalCarRented({
+      fromBlock: 0
+    }, function (error, event) {
+      if (error) console.log(error);
+  
+      const bytes32Hash = event.returnValues['ipfsHash'];
+      const carRenter = event.returnValues['carRenter'];
+  
+      console.log(`New Renter ${carRenter} for a car ${bytes32Hash}`);
+    });
 
   } catch (err) {
     console.log(`Error sending hash to contract ${err}`);
