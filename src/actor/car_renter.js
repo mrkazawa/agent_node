@@ -28,7 +28,6 @@ const RENTER_PRIVATE = tools.readJsonFIle(RENTER_CREDS_PATH).privateKey;
 const RESULT_DATA_PATH = '/home/vagrant/result_car_renter.csv';
 tools.clearFIle(RESULT_DATA_PATH);
 
-
 async function getCarInfo() {
   console.log('Getting Car Info From Rental Car App..');
   const start = performance.now();
@@ -62,9 +61,14 @@ async function sendPayment(carInfo) {
   console.log('Paying Car to IOTA..');
   const start = performance.now();
 
+  const message = {
+    amount: carInfo[1]
+  };
+  const feeInTrytes = paymentEngine.convertAsciiToTrytes(JSON.stringify(message));
   const transfers = [{
-    value: carInfo[1],
+    value: 0,
     address: carInfo[2],
+    message: feeInTrytes,
     tag: carInfo[3]
   }];
 

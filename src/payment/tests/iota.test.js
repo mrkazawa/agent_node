@@ -44,6 +44,10 @@ test('Attach an address to tangle', async () => {
   expect(tailTxHash).toBeTruthy();
 });
 
+/**
+ * FIXME: I dont know why but sending value: 1 takes
+ * more time to complete rather than if value: 0 
+ */
 test('Sending iota in a transaction', async () => {
   const transfers = [{
     value: 1,
