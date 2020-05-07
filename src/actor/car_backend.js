@@ -25,31 +25,26 @@ app.post('/access', async (req, res) => {
   const signature = req.body.signature;
   const carHash = req.body.carHash;
 
-  try {
-    const ipfsHashInBytes = computeEngine.convertIpfsHashToBytes32(carHash);
+  const ipfsHashInBytes = computeEngine.convertIpfsHashToBytes32(carHash);
 
-    const carObj = await carRental.methods.getRentalCarDetail(ipfsHashInBytes).call({
-      from: CAR_ADDRESS
-    });
-    const carRenter = carObj[1];
-    const isValue = carObj[2];
-    const isRented = carObj[3];
-  
-    if (!isValue) {
-      res.status(404).send('car hash is ot found!');
-    }
-    if (!isRented) {
-      res.status(403).send('car is not being rented for now!');
-    }
-    if (!computeEngine.verifySignature(carHash, signature, carRenter)) {
-      res.status(403).send('invalid signature!');
-    }
-  
-    res.status(200).send('car access successful');
+  const carObj = await carRental.methods.getRentalCarDetail(ipfsHashInBytes).call({
+    from: CAR_ADDRESS
+  });
+  const carRenter = carObj[1];
+  const isValue = carObj[2];
+  const isRented = carObj[3];
 
-  } catch (err) {
-    throw new Error(`There is an error ${error}`);
+  if (!isValue) {
+    res.status(404).send('car hash is ot found!');
   }
+  if (!isRented) {
+    res.status(403).send('car is not being rented for now!');
+  }
+  if (!computeEngine.verifySignature(carHash, signature, carRenter)) {
+    res.status(403).send('invalid signature!');
+  }
+
+  res.status(200).send('car access successful');
 });
 
 app.listen(HTTP_PORT, () => {

@@ -117,6 +117,24 @@ cd ~/src
 chmod +x ./payment/2_run_iri.sh && ./payment/2_run_iri.sh $your_coo_address
 ```
 
+## To download the 'result' file from VM ##
+
+```bash
+scp vagrant@agent1.local:~/result_car_owner_detail.csv ~/.
+scp vagrant@agent1.local:~/result_car_owner_metadata.csv ~/.
+
+scp vagrant@agent2.local:~/result_car_renter_access_car.csv  ~/.
+scp vagrant@agent2.local:~/result_car_renter_get_car.csv  ~/.
+scp vagrant@agent2.local:~/result_car_renter_send_hash.csv  ~/.
+scp vagrant@agent2.local:~/result_car_renter_send_payment.csv  ~/.
+
+scp vagrant@notary1.local:~/result_rental_car_insert_car.csv  ~/.
+scp vagrant@notary1.local:~/result_rental_car_task_2.csv  ~/.
+
+scp vagrant@notary2.local:~/result_rental_car_verify_payment.csv  ~/.
+scp vagrant@notary2.local:~/result_rental_car_task_1.csv ~/.
+```
+
 - - - -
 
 ## Known Issues ##

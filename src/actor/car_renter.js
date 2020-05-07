@@ -1,4 +1,3 @@
-const http = require('http');
 const {
   performance
 } = require('perf_hooks');
@@ -25,28 +24,32 @@ const RENTER_ADDRESS = computeEngine.convertToChecksumAddress(tools.readJsonFIle
 const RENTER_PRIVATE = tools.readJsonFIle(RENTER_CREDS_PATH).privateKey;
 
 // performance params
-const RESULT_DATA_PATH = '/home/vagrant/result_car_renter.csv';
-tools.clearFIle(RESULT_DATA_PATH);
+const RESULT_DATA_PATH_GET_CAR = '/home/vagrant/result_car_renter_get_car.csv';
+const RESULT_DATA_PATH_SEND_PAYMENT = '/home/vagrant/result_car_renter_send_payment.csv';
+const RESULT_DATA_PATH_SEND_HASH = '/home/vagrant/result_car_renter_send_hash.csv';
+const RESULT_DATA_PATH_ACCESS_CAR = '/home/vagrant/result_car_renter_access_car.csv';
 
-async function getCarInfo() {
-  console.log('Getting Car Info From Rental Car App..');
+// always begin with clean state
+tools.clearFIle(RESULT_DATA_PATH_GET_CAR);
+tools.clearFIle(RESULT_DATA_PATH_SEND_PAYMENT);
+tools.clearFIle(RESULT_DATA_PATH_SEND_HASH);
+tools.clearFIle(RESULT_DATA_PATH_ACCESS_CAR);
+
+// the number of iteration for benchamrking
+const ITERATION = parseInt(process.env.ITERATION) || 1;
+
+async function getUnrentedCarInfo() {
+  console.log('Getting One Unrented Car Info From Rental Car App..');
   const start = performance.now();
 
-  const options = {
-    method: 'get',
-    url: CAR_INFO_URL,
-    httpAgent: new http.Agent({
-      keepAlive: false
-    })
-  };
-
+  const options = tools.formGetRequest(CAR_INFO_URL);
   const response = await tools.sendRequest(options);
   if (response instanceof Error) {
     tools.logAndExit(response);
   }
 
   const end = performance.now();
-  tools.savingResult('Get Car Info From App', RESULT_DATA_PATH, start, end);
+  tools.savingResult('Get Car Info From App', RESULT_DATA_PATH_GET_CAR, start, end);
   console.log(`${response.data.hash} car info obtained!`);
 
   return [
@@ -57,7 +60,7 @@ async function getCarInfo() {
   ];
 }
 
-async function sendPayment(carInfo) {
+async function sendPaymentToIota(carInfo) {
   console.log('Paying Car to IOTA..');
   const start = performance.now();
 
@@ -78,13 +81,13 @@ async function sendPayment(carInfo) {
   }
 
   const end = performance.now();
-  tools.savingResult('Send Payment to IOTA', RESULT_DATA_PATH, start, end);
+  tools.savingResult('Send Payment to IOTA', RESULT_DATA_PATH_SEND_PAYMENT, start, end);
   console.log(`${tailTxHash} tx hash obtained!`);
 
   return tailTxHash;
 }
 
-async function sendTxHash(carInfo, tailTxHash) {
+async function submitTxHashToNotary(carInfo, tailTxHash) {
   console.log('Sending Car Payment Hash to App..');
   const start = performance.now();
 
@@ -94,34 +97,34 @@ async function sendTxHash(carInfo, tailTxHash) {
     renter_address: RENTER_ADDRESS
   };
 
-  const options = {
-    method: 'post',
-    url: PAYMENT_INFO_URL,
-    data: payload,
-    httpAgent: new http.Agent({
-      keepAlive: false
-    })
-  };
-
+  const options = tools.formPostRequest(PAYMENT_INFO_URL, payload);
   const response = await tools.sendRequest(options);
   if (response instanceof Error) {
     tools.logAndExit(response);
   }
 
   const end = performance.now();
-  tools.savingResult('Send Tx Hash to App', RESULT_DATA_PATH, start, end);
+  tools.savingResult('Send Tx Hash to App', RESULT_DATA_PATH_SEND_HASH, start, end);
   console.log(`${tailTxHash} is sent to Rental Car application`);
 }
 
 async function getContractAbi() {
-  let options = {
-    method: 'get',
-    url: CONTRACT_ABI_URL,
-    httpAgent: new http.Agent({
-      keepAlive: false
-    })
+  const options = tools.formGetRequest(CONTRACT_ABI_URL);
+  const response = await tools.sendRequest(options);
+  if (response instanceof Error) {
+    tools.logAndExit(response);
+  }
+
+  return response.data;
+}
+
+async function sendAccessPayload(ipfsHash, signature) {
+  const payload = {
+    carHash: ipfsHash,
+    signature: signature
   };
 
+  const options = tools.formPostRequest(ACCESS_CAR_URL, payload);
   const response = await tools.sendRequest(options);
   if (response instanceof Error) {
     tools.logAndExit(response);
@@ -137,44 +140,14 @@ async function doRentalCarRentedEvent(bytes32Hash) {
   const ipfsHash = computeEngine.convertBytes32ToIpfsHash(bytes32Hash);
   const signature = computeEngine.signMessage(ipfsHash, RENTER_PRIVATE);
 
-  const payload = {
-    carHash: ipfsHash,
-    signature: signature
-  }
-
-  let options = {
-    method: 'post',
-    url: ACCESS_CAR_URL,
-    data: payload,
-    httpAgent: new http.Agent({
-      keepAlive: false
-    })
-  };
-
-  const response = await tools.sendRequest(options);
-  if (response instanceof Error) {
-    tools.logAndExit(response);
-  }
+  await sendAccessPayload(ipfsHash, signature);
 
   const end = performance.now();
-  tools.savingResult('Accessing Car', RESULT_DATA_PATH, start, end);
-  console.log(`Successfully access the car`);
+  tools.savingResult('Accessing Car', RESULT_DATA_PATH_ACCESS_CAR, start, end);
+  console.log(`Successfully access the car with this signature: ${signature}`);
 }
 
-async function deployContract() {
-  let options = {
-    method: 'get',
-    url: CONTRACT_ABI_URL,
-    httpAgent: new http.Agent({
-      keepAlive: false
-    })
-  };
-
-  const response = await tools.sendRequest(options);
-  if (response instanceof Error) {
-    tools.logAndExit(response);
-  }
-
+async function addRentalCarRentedEventListener() {
   const rawAbi = await getContractAbi();
   const carRental = computeEngine.constructSmartContract(rawAbi.abi, rawAbi.networks[NETWORK_ID].address);
 
@@ -193,25 +166,29 @@ async function deployContract() {
 }
 
 async function main() {
-  await deployContract();
+  await addRentalCarRentedEventListener();
 
-  const carInfo = await getCarInfo();
-  const tailTxHash = await sendPayment(carInfo);
+  for (i = 0; i < ITERATION; i++) {
+    const carInfo = await getUnrentedCarInfo();
+    const tailTxHash = await sendPaymentToIota(carInfo);
 
-  while (true) {
-    // waiting until the payment is verified
-    // it can take 60 seconds, depending on the `tick` parameter in
-    // the COO node.
-    const confirmed = await paymentEngine.isTxVerified(tailTxHash);
-    if (confirmed instanceof Error) {
-      tools.logAndExit(confirmed);
-    }
+    while (true) {
+      // waiting until the payment is verified
+      // it can take 60 seconds, depending on the `tick` parameter in
+      // the COO node.
+      const confirmed = await paymentEngine.isTxVerified(tailTxHash);
+      if (confirmed instanceof Error) {
+        tools.logAndExit(confirmed);
+      }
 
-    if (confirmed) {
-      await sendTxHash(carInfo, tailTxHash);
-      break;
+      if (confirmed) {
+        await submitTxHashToNotary(carInfo, tailTxHash);
+        break;
+      }
     }
   }
+
+  console.log('Run complete!!!');
 }
 
 main();
