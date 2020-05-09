@@ -3,9 +3,9 @@ const {
   performance
 } = require('perf_hooks');
 
-const storageEngine = require('../storage/ipfs_engine');
-const computeEngine = require('../compute/ethereum_engine');
-const paymentEngine = require('../payment/iota_engine');
+const storageEngine = require('../../storage/ipfs_engine');
+const computeEngine = require('../../compute/ethereum_engine');
+const paymentEngine = require('../../payment/iota_engine');
 const tools = require('./tools');
 
 const NOTARY_BASE_URL = 'http://notary1.local:3002';
@@ -18,7 +18,7 @@ const RENT_FEE = 1;
 
 // compute params
 const NETWORK_ID = '2020';
-const OWNER_CREDS_PATH = '/home/vagrant/src/compute/car_owner_credentials.json';
+const OWNER_CREDS_PATH = '/home/vagrant/src/actors/rental_car/car_owner_credentials.json';
 const OWNER_ADDRESS = computeEngine.convertToChecksumAddress(tools.readJsonFIle(OWNER_CREDS_PATH).address);
 
 // performance params

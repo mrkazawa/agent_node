@@ -6,14 +6,15 @@ const os = require("os");
 const HOSTNAME = os.hostname();
 const HTTP_PORT = process.env.HTTP_PORT || 3000;
 
-const computeEngine = require('../compute/ethereum_engine');
+const computeEngine = require('../../compute/ethereum_engine');
 const tools = require('./tools');
 
-const NOTARY_BASE_URL = 'http://notary1.local:3002';
-const CONTRACT_ABI_URL = NOTARY_BASE_URL + '/contract_abi';
+// need to get the contract abi from the deployer (master node)
+// FIXME: If we use notary 2 URL, the abi will not be the same and we cannot get events
+const CONTRACT_ABI_URL = 'http://notary1.local:3002/contract_abi';
 
 const NETWORK_ID = '2020';
-const CAR_CREDS_PATH = '/home/vagrant/src/compute/car_backend_credentials.json';
+const CAR_CREDS_PATH = '/home/vagrant/src/actors/rental_car/car_backend_credentials.json';
 const CAR_ADDRESS = computeEngine.convertToChecksumAddress(tools.readJsonFIle(CAR_CREDS_PATH).address);
 
 let carRental; // to store car rental smart contract object

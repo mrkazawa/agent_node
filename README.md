@@ -1,5 +1,8 @@
 # Agent Node #
 
+This repository is the implementation of the agent node from our paper "", which is published [here]().
+To run fully run all of the engines here, you also need to run all of the engines in the Notary Node, which is available [here](https://github.com/mrkazawa/notary_node).
+
 ## Installation ##
 
 All of the required softwares and tools has been included in the `Vagrantfile` and it will be installed during the `vagrant up` using shell provisioning scripts in `/shell` directory.
@@ -19,6 +22,13 @@ vagrant ssh agent2
 vagrant ssh agent3
 ```
 
+Then, we need to install all of the Node JS dependencies.
+
+```bash
+cd ~/src
+npm install # run this in all agents (1, 2, and 3)
+```
+
 Other useful commands,
 
 ```bash
@@ -32,13 +42,14 @@ vagrant destroy -f # to completely delete VM
 
 ## Running the Engines ##
 
+You can run these steps in all of the agents' terminal.
+
 ### 1. Run the Storage Engine ###
 
-First of all, lets install all required softwares and create the IPFS instance.
+First of all, lets create an IPFS instance.
 
 ```bash
 cd ~/src
-npm install # installing all the dependencies
 npm run ipfs-build # initiate IPFS
 ```
 
@@ -82,18 +93,35 @@ chmod +x ./storage/add_boot_ipfs.sh && ./storage/add_boot_ipfs.sh $your_boot_nod
 
 npm run ipfs-start # to start IPFS daemon
 npm test # if all is working correctly, the test should pass
+```
 
+Additional commands,
+
+```bash
 npm run ipfs-stop # to stop IPFS daemon
 npm run ipfs-destroy # to destroy IPFS instance
 ```
 
 ### 2. Run the Compute Engine ###
 
-Basically, you do not need to configure anything.
-You can, however, change the location of the compute network by modifying the `web3.js` in `src/compute/web3.js`.
-Make sure it refer to the desired compute network.
+At this moment, we use ganache network for our compute engine.
+Therefore, the agents are not running any Ethereum node.
+You can change the location of the ganache network by modifying the `web3.js` in `src/compute/web3.js`.
+
+**TODO:** move the implementation to use Geth instead.
 
 ### 3. Run the Payment Engine ###
+
+For now, we still uses one IRI and one COO.
+The agents are not running any IRI node.
+You can change the location of the IOTA network by modifying the `iota.js` in `src/payment/iota.js`.
+
+**TODO:** move the implementation to use multiple IRI nodes.
+
+The following snippets are steps for multiple IRIs.
+The IRI node can connect to one another but the snapshot is not working.
+Only one node has the correct IOTA balances according to the snapshot.
+***Need further investigation!***
 
 First of all, clone and install IRI.
 
@@ -117,23 +145,21 @@ cd ~/src
 chmod +x ./payment/2_run_iri.sh && ./payment/2_run_iri.sh $your_coo_address
 ```
 
-## To download the 'result' file from VM ##
+The configuration of the IRI node parameter can be tweaked in `src/payment/config/config.json`. Meanwhile, the snapshot file can be tweaked in `src/payment/config/snapshot.txt`.
 
-```bash
-scp vagrant@agent1.local:~/result_car_owner_detail.csv ~/.
-scp vagrant@agent1.local:~/result_car_owner_metadata.csv ~/.
+- - - -
 
-scp vagrant@agent2.local:~/result_car_renter_access_car.csv  ~/.
-scp vagrant@agent2.local:~/result_car_renter_get_car.csv  ~/.
-scp vagrant@agent2.local:~/result_car_renter_send_hash.csv  ~/.
-scp vagrant@agent2.local:~/result_car_renter_send_payment.csv  ~/.
+## Running the IoT Agents for Apps ##
 
-scp vagrant@notary1.local:~/result_rental_car_insert_car.csv  ~/.
-scp vagrant@notary1.local:~/result_rental_car_task_2.csv  ~/.
+This repository provides examples of IoT agents implementation for IoT apps.
+These agent nodes are complementary nodes that lives along with the Notary Node to provide IoT application use cases.
+Please refer to the paper for more details.
+So far, we only have single 'Rental Car' IoT applications in `src/actors/rental_car`.
+In the future, we may add more use cases example.
 
-scp vagrant@notary2.local:~/result_rental_car_verify_payment.csv  ~/.
-scp vagrant@notary2.local:~/result_rental_car_task_1.csv ~/.
-```
+Follow the instruction in [here](https://github.com/mrkazawa/agent_node/tree/master/src/actors/rental_car) to run the Rental Car scenario.
+
+**TODO:** add more IoT agents example.
 
 - - - -
 
@@ -147,304 +173,6 @@ Then, try to ping one another.
 ping agent1.local # run this in agent #1
 ping agent2.local # run this in agent #2
 ping agent3.local # run this in agent #3
-
-# then try to ping one another, this should solves the issues
-```
-
-## Authors ##
-
-- **Yustus Oktian** - *Initial work*
-
-## Acknowledgments ##
-
-- Hat tip to anyone whose code was used
-- Fellow researchers
-- Korea Government for funding this project
-
-
-
-
-
-
-
-
-
-
-
-
-
-We need to go to the Core Engine directory
-
-```bash
-cd src/core
-npm install # install all the required Node JS packages
-```
-
-Then, we run the core engine separately in each of the VM machines.
-
-```bash
-npm run notary1 # run this in notary 1 machine
-npm run notary2 # run this in notary 2 machine
-npm run notary3 # run this in notary 3 machine
-npm run notary4 # run this in notary 4 machine
-```
-
-You will see that the VM machines start to creating blocks.
-To check if the system works correctly, we can run the following commands.
-
-```bash
-npm run posters
-npm run getters
-```
-
-Those commands should display HTTP status of 200, indicating that the core engine server can process the commands.
-
-- - - -
-
-### Running the Storage Engine ###
-
-Taken from [here](https://medium.com/@s_van_laar/deploy-a-private-ipfs-network-on-ubuntu-in-5-steps-5aad95f7261b).
-The private key generation in the article is wrong, need to change the code in the MEDIUM link to the one provided [here](https://github.com/ipfs/go-ipfs/issues/6650).
-
-We have to pick ***ONE*** node as the bootnode.
-We choose `notary1` to be the bootnode in this experiment.
-Meanwhile, other nodes serve as follower node that connects to the bootnode during boostrapings.
-
-Notes!
-
-- First, we SSH to the respective VM (either `notary1`, `notary2`, `notary3`, and `notary4`)
-- For new installation run the following ***steps (1-4)!***
-- If already installed just run the IPFS using ***step 4!***
-- The following steps need to be operated in order for all nodes. After running Step 1, do not go to Step 2 directly before executing Step 1 in other nodes as well
-
-#### 1. Initiate the IPFS nodes ####
-
-***Run this on all nodes.***
-
-```bash
-npm run build
-```
-
-#### 2. Generate private swarm key and distribute the key to other nodes ####
-
-***Run ONLY on the boot node.***
-
-```bash
-npm run distribute-keys
-```
-
-#### 3. Add boostraping to points to `notary1` as a bootnode ####
-
-***Run this on all nodes.***
-
-```bash
-npm run add-boot-node
-```
-
-#### 4. Start the IPFS swarm node ####
-
-***Run this on all nodes.***
-
-```bash
-cd ~/src/storage
-npm install # installing all the dependencies
-
-npm run start # to start IPFS daemon
-```
-
-#### 5. Test, stop, and destroy IPFS ####
-
-```bash
-npm test # if all is working correctly, the test should pass
-
-npm run stop # to stop IPFS daemon
-npm run destroy # to destroy IPFS
-
-```
-
-- - - -
-
-### Running the Compute Engine ###
-
-```bash
-cd ~/src/compute
-npm install # installing all the dependencies
-
-npm run network # run ganache-cli (local ethereum)
-```
-
-- - - -
-
-### Running the Payment Engine ###
-
-Taken from these sources:
-
-- <https://github.com/iotaledger/compass/blob/master/docs/HOWTO_private_tangle.md>
-- <https://github.com/iotaledger/compass/issues/126>
-- <https://docs.iota.org/docs/compass/0.1/how-to-guides/set-up-a-private-tangle>
-
-***WHEN THIS IS NOT OUR FIRST TIME SETUP!***
-
-Just run this code.
-
-```bash
-# ONLY RUN THIS WHEN MILESTONES ALREADY REACHED!
-# AT THIS POINT, THE COO IS CRASHED!
-# MAKE A BIGGER DEPTH IN config.json
-# THEN RUN THIS
-cd ~/compass/docs/private_tangle
-./01_calculate_layers.sh
-
-# run IRI node
-./02_run_iri.sh
-# run COO node, without bootstrap
-./03_run_coordinator.sh -broadcast
-```
-
-Otherwise, follow all of these procedures
-
-#### 1. Get the code ####
-
-```bash
-# get compass from our forked repo
-git clone https://github.com/mrkazawa/compass.git
-cd compass
-```
-
-#### 2. Compute the Merkle tree ####
-
-```bash
-# build binary and jar
-bazel build //compass:layers_calculator
-# convert it to docker image
-bazel run //docker:layers_calculator
-# to check if it is indeed created
-docker image list
-
-# create a random seed
-cat /dev/urandom |LC_ALL=C tr -dc 'A-Z9' | fold -w 81 | head -n 1
-# keep this seed safe and private
-
-# copy the seed to config.json
-cd docs/private_tangle
-cp config.example.json config.json
-nano config.json
-```
-
-Edit the `config.json` so that to have the `seed` points to our previous randomly generated seed.
-For simulation purpose, we can use NOT RANDOM SEED just for testing.
-However, for production case, we have to generate RANDOM SEED.
-
-Then, we configure the `depth` to a lower value to save time to build the tree.
-For example, we set it to have the value of `16`.
-The `depth` of the tree will impact on the network uptime.
-The coordinator will crash when it reaches the latest milestones.
-More of info can be found here <https://docs.iota.org/docs/compass/0.1/references/merkle-tree-compute-times>
-
-We can also configure the `tick` value.
-This value represent how many miliseconds the coordinator will send milestones to the network.
-We set this value to `60000`, which 60 seconds.
-The longer the `tick`, the fewer transactions can be confirmed.
-
-More configuration detail can be seen here <https://docs.iota.org/docs/compass/0.1/references/compass-configuration-options>
-
-```json
-{
-  "seed": "MYSEEDHEREPLEASEREPLACEMEIMMEDIATELYWITHSOMETHINGSECURE99999999999999999999999999",
-  "powMode": "CURLP81",
-  "sigMode": "CURLP27",
-  "security": 1,
-  "depth": 16,
-  "milestoneStart": 0,
-  "mwm": 9,
-  "tick": 60000,
-  "host": "http://localhost:14265"
-}
-```
-
-After setup the `config.json`.
-***Then, finally we run this***
-
-```bash
-./01_calculate_layers.sh
-```
-
-#### 3. Run an IRI node ####
-
-Create an IOTA snapshot.
-This contains list of addresses and its NON-ZERO IOTA values.
-The addressess are generated from the SEED.
-For this project we use two sender and receiver seeds that can be find in the `src/payment/sender_info.json` and `src/payment/receiver_info.json`
-
-```bash
-touch snapshot.txt
-nano snapshot.txt
-```
-
-Add this the following texts to the file.
-It contains lists of sender addresses all with `1000` IOTA.
-The address in `src/payment/sender_info.json` and `src/payment/receiver_info.json` are with checksum.
-In the snapshot we do not need the checksum so we remove THE LAST 9 CHARACTERS!
-The format of `snapshot.txt` is `<address>;<value>`.
-Total number of values in the snapshot need to be equal to `2779530283277761`
-
-```txt
-VZAWPZERLCVLNUCPGPKLNDDDGQLIODLWZNXVRYZVRHGDMKCSEEHRMJXBACJVLPGAQS9GKRJDMSMZEWKUY;1779530283277761
-OM9ZFKCUDDOK9UCE9IPXENYOIPSJDCIDEEJGYCENLRFR9CIVNEBQCMWBHSROGPOGKJCABAWJHDEIITJSZ;1000000000000000
-```
-
-***Then, finally we run this***
-
-```bash
-./02_run_iri.sh
-```
-
-Open other terminal to continue.
-
-#### 4. Run Compass ####
-
-First, we build and create docker image.
-
-```bash
-cd ~/compass/
-
-# build the coordinator
-bazel build //compass:coordinator
-# convert it to docker image
-bazel run //docker:coordinator
-# to check if it is indeed created
-docker image list
-
-cd docs/private_tangle
-```
-
-***Then, finally we run this***
-
-```bash
-./03_run_coordinator.sh -bootstrap -broadcast
-```
-
-#### To stop IRI node or Compass node ####
-
-```bash
-docker ps # get the CCONTAINER_ID
-# docker stop <CCONTAINER_ID>
-docker stop 6bd47de08e3b
-```
-
-- - - -
-
-## Known Issues ##
-
-If the node cannot ping to one another, perhaps it has the problem with the Avahi DNS.
-Try to ping to itself using the configured domain in all nodes.
-Then, try to ping one another.
-
-```bash
-ping notary1.local # run this in notary #1
-ping notary2.local # run this in notary #2
-ping notary3.local # run this in notary #3
-ping notary4.local # run this in notary #4
 
 # then try to ping one another, this should solves the issues
 ```

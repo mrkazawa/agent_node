@@ -2,13 +2,13 @@
   "name": "agent-node",
   "version": "0.1.0",
   "description": "Agent node implementation",
-  "main": "index.js",
+  "main": "",
   "scripts": {
-    "car-owner": "node ./actor/car_owner",
-    "car-renter": "node ./actor/car_renter",
-    "car-backend": "node ./actor/car_backend",
-    "bench-car-owner": "ITERATION=1009 node ./actor/car_owner",
-    "bench-car-renter": "ITERATION=1000 node ./actor/car_renter",
+    "car-owner": "node ./actors/rental_car/car_owner",
+    "car-renter": "node ./actors/rental_car/car_renter",
+    "car-backend": "node ./actors/rental_car/car_backend",
+    "bench-car-owner": "ITERATION=1000 node ./actors/rental_car/car_owner",
+    "bench-car-renter": "ITERATION=1000 node ./actors/rental_car/car_renter",
     "ipfs-build": "chmod +x ./storage/build_ipfs.sh && ./storage/build_ipfs.sh",
     "ipfs-start": "chmod +x ./storage/start_ipfs.sh && ./storage/start_ipfs.sh",
     "ipfs-stop": "chmod +x ./storage/stop_ipfs.sh && ./storage/stop_ipfs.sh",
@@ -25,7 +25,7 @@
     "iot"
   ],
   "author": "Yustus Oktian",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@iota/converter": "^1.0.0-beta.23",
     "@iota/core": "^1.0.0-beta.27",

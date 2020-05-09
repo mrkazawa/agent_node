@@ -2,8 +2,8 @@ const {
   performance
 } = require('perf_hooks');
 
-const computeEngine = require('../compute/ethereum_engine');
-const paymentEngine = require('../payment/iota_engine');
+const computeEngine = require('../../compute/ethereum_engine');
+const paymentEngine = require('../../payment/iota_engine');
 const tools = require('./tools');
 
 const NOTARY_BASE_URL = 'http://notary2.local:3002';
@@ -19,7 +19,7 @@ const ACCESS_CAR_URL = CAR_BASE_URL + '/access';
 
 // compute params
 const NETWORK_ID = '2020';
-const RENTER_CREDS_PATH = '/home/vagrant/src/compute/car_renter_credentials.json';
+const RENTER_CREDS_PATH = '/home/vagrant/src/actors/rental_car/car_renter_credentials.json';
 const RENTER_ADDRESS = computeEngine.convertToChecksumAddress(tools.readJsonFIle(RENTER_CREDS_PATH).address);
 const RENTER_PRIVATE = tools.readJsonFIle(RENTER_CREDS_PATH).privateKey;
 
