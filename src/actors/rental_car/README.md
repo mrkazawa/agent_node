@@ -8,9 +8,9 @@ To run fully run the scenrio here, you also need to run all of the engines in th
 We need to run two instances of Rental Car apps in the `notary1` and `notary2` terminals.
 After ssh to the respective termminal, run the following commands.
 
-```bash
-cd ~/src
-npm run rental-car # run this in notary1 and notary2
+```console
+vagrant@notary1:~$ cd ~/src
+vagrant@notary1:~$ npm run rental-car # run this in notary1 and notary2
 ```
 
 This command will deploy the smart contract and open REST API endpoints for our agents.
@@ -28,9 +28,9 @@ It has to allow valid car renter to use the car and reject invalid or malicious 
 
 SSH to `agent3` then run.
 
-```bash
-cd ~/src
-npm run car-backend
+```console
+vagrant@agent3:~$ cd ~/src
+vagrant@agent3:~$ npm run car-backend
 ```
 
 ### 2. Run the Car Owner ###
@@ -41,9 +41,9 @@ Then, he push car metadata in the compute engine.
 
 SSH to `agent1` then run.
 
-```bash
-cd ~/src
-npm run car-owner
+```console
+vagrant@agent1:~$ cd ~/src
+vagrant@agent1:~$ npm run car-owner
 ```
 
 ### 3. Run the Car Renter ###
@@ -55,9 +55,9 @@ Once, his request is approved by the app, he signs an authenticated message to t
 
 SSH to `agent2` then run.
 
-```bash
-cd ~/src
-npm run car-renter
+```console
+vagrant@agent2:~$ cd ~/src
+vagrant@agent2:~$ npm run car-renter
 ```
 
 - - - -
@@ -67,41 +67,49 @@ npm run car-renter
 You can run the following commands to iterate this scenario multiple times to get the recorded latency.
 To run the default configuration:
 
-```bash
-cd ~/src
-npm run car-backend # run this in agent3
-npm run bench-car-owner # run this in agent1
-npm run bench-car-renter # run this in agent2
+```console
+vagrant@agent3:~$ cd ~/src
+vagrant@agent3:~$ npm run car-backend # run this in agent3
+
+vagrant@agent1:~$ cd ~/src 
+vagrant@agent1:~$ npm run bench-car-owner # run this in agent1
+
+vagrant@agent2:~$ cd ~/src 
+vagrant@agent2:~$ npm run bench-car-renter # run this in agent2
 ```
 
 This will iterate the scenario `1000` times.
 To customize your iteration number, run the following instead.
 Replace the `$your_iteration_number` with your desired iteration number, e.g. `50` times.
 
-```bash
-cd ~/src
-npm run car-backend
-ITERATION=$your_iteration_number node ./actors/rental_car/car_owner
-ITERATION=$your_iteration_number node ./actors/rental_car/car_renter
+```console
+vagrant@agent3:~$ cd ~/src
+vagrant@agent3:~$ npm run car-backend # run this in agent3
+
+vagrant@agent1:~$ cd ~/src
+vagrant@agent1:~$ ITERATION=$your_iteration_number node ./actors/rental_car/car_owner # run this in agent1
+
+vagrant@agent2:~$ cd ~/src
+vagrant@agent2:~$ ITERATION=$your_iteration_number node ./actors/rental_car/car_renter # run this in agent2
 ```
 
 To download the 'result' file from vagrant VM, run the following.
 These csvs are recorded latency from segments of the application logics in this scenario.
 
-```bash
-scp vagrant@agent1.local:~/result_car_owner_detail.csv ~/.
-scp vagrant@agent1.local:~/result_car_owner_metadata.csv ~/.
+```console
+foo@ubuntu:~$ scp vagrant@agent1.local:~/result_car_owner_detail.csv ~/.
+foo@ubuntu:~$ scp vagrant@agent1.local:~/result_car_owner_metadata.csv ~/.
 
-scp vagrant@agent2.local:~/result_car_renter_access_car.csv  ~/.
-scp vagrant@agent2.local:~/result_car_renter_get_car.csv  ~/.
-scp vagrant@agent2.local:~/result_car_renter_send_hash.csv  ~/.
-scp vagrant@agent2.local:~/result_car_renter_send_payment.csv  ~/.
+foo@ubuntu:~$ scp vagrant@agent2.local:~/result_car_renter_access_car.csv  ~/.
+foo@ubuntu:~$ scp vagrant@agent2.local:~/result_car_renter_get_car.csv  ~/.
+foo@ubuntu:~$ scp vagrant@agent2.local:~/result_car_renter_send_hash.csv  ~/.
+foo@ubuntu:~$ scp vagrant@agent2.local:~/result_car_renter_send_payment.csv  ~/.
 
-scp vagrant@notary1.local:~/result_rental_car_insert_car.csv  ~/.
-scp vagrant@notary1.local:~/result_rental_car_task_2.csv  ~/.
+foo@ubuntu:~$ scp vagrant@notary1.local:~/result_rental_car_insert_car.csv  ~/.
+foo@ubuntu:~$ scp vagrant@notary1.local:~/result_rental_car_task_2.csv  ~/.
 
-scp vagrant@notary2.local:~/result_rental_car_verify_payment.csv  ~/.
-scp vagrant@notary2.local:~/result_rental_car_task_1.csv ~/.
+foo@ubuntu:~$ scp vagrant@notary2.local:~/result_rental_car_verify_payment.csv  ~/.
+foo@ubuntu:~$ scp vagrant@notary2.local:~/result_rental_car_task_1.csv ~/.
 ```
 
 - - - -
