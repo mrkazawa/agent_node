@@ -1,6 +1,6 @@
 # Agent Node #
 
-This repository is the implementation of the agent node from our paper "", which is published [here]().
+This repository is the implementation of the agent node from our paper "Hierarchical Multi-Blockchain Architecture for Scalable Internet of Things Environment", which is published [here](https://www.mdpi.com/2079-9292/9/6/1050).
 To run fully run all of the engines here, you also need to run all of the engines in the Notary Node, which is available [here](https://github.com/mrkazawa/notary_node).
 
 ## Installation ##
@@ -8,13 +8,29 @@ To run fully run all of the engines here, you also need to run all of the engine
 You need `vagrant` and `virtualbox` for this project.
 So install them first if you do not have it yet in your machine.
 You can download them [here](https://www.vagrantup.com/downloads.html) and [here](https://www.virtualbox.org/wiki/Downloads).
-All of the required softwares and tools has been included in the `Vagrantfile` and it will be installed during the `vagrant up` using shell provisioning scripts in `/shell` directory.
+All of the required softwares and tools has been included in the `Vagrantfile` and it will be installed during the `vagrant up` using shell provisioning scripts in `./shell` directory.
+
+To clone and setup the node.
 
 ```console
 foo@ubuntu:~$ cd ~/
-foo@ubuntu:~$ git clone https://github.com/mrkazawa/agent_node.git
-foo@ubuntu:~$ cd ~/agent_node
+foo@ubuntu:~$ git clone https://github.com/mrkazawa/proxy_node.git
+foo@ubuntu:~$ cd ~/proxy_node
+```
 
+***Note!*** Make sure to change the CPU and RAM information to match your needs.
+They will determine the CPU and RAM of your VMs.
+The number of CPU and RAM allowed per VM are bound to the resource in your host machine.
+You can change this setting in `Vagrantfile`.
+
+```ruby
+BOX_MEMORY = "8192"
+BOX_CPU = 4
+```
+
+To install and run the node, follow these steps.
+
+```console
 foo@ubuntu:~$ vagrant up # if it is our first time, this will take some times
 foo@ubuntu:~$ vagrant rsync-auto
 
@@ -109,7 +125,7 @@ vagrant@agent1:~$ npm run ipfs-destroy # to destroy IPFS instance
 
 At this moment, we use ganache network for our compute engine.
 Therefore, the agents are not running any Ethereum node.
-You can change the location of the ganache network by modifying the `web3.js` in `src/compute/web3.js`.
+You can change the location of the ganache network by modifying the `web3.js` in `./src/compute/web3.js`.
 
 **TODO:** move the implementation to use Geth instead.
 
@@ -117,7 +133,7 @@ You can change the location of the ganache network by modifying the `web3.js` in
 
 For now, we still uses one IRI and one COO.
 The agents are not running any IRI node.
-You can change the location of the IOTA network by modifying the `iota.js` in `src/payment/iota.js`.
+You can change the location of the IOTA network by modifying the `iota.js` in `./src/payment/iota.js`.
 
 **TODO:** move the implementation to use multiple IRI nodes.
 
@@ -147,7 +163,7 @@ vagrant@agent1:~$ cd ~/src
 vagrant@agent1:~$ chmod +x ./payment/2_run_iri.sh && ./payment/2_run_iri.sh $your_coo_address
 ```
 
-The configuration of the IRI node parameter can be tweaked in `src/payment/config/config.json`. Meanwhile, the snapshot file can be tweaked in `src/payment/config/snapshot.txt`.
+The configuration of the IRI node parameter can be tweaked in `./src/payment/config/config.json`. Meanwhile, the snapshot file can be tweaked in `./src/payment/config/snapshot.txt`.
 
 - - - -
 
@@ -156,7 +172,7 @@ The configuration of the IRI node parameter can be tweaked in `src/payment/confi
 This repository provides examples of IoT agents implementation for IoT apps.
 These agent nodes are complementary nodes that lives along with the Notary Node to provide IoT application use cases.
 Please refer to the paper for more details.
-So far, we only have a 'Rental Car' IoT application in `src/actors/rental_car`.
+So far, we only have a 'Rental Car' IoT application in `./src/actors/rental_car`.
 In the future, we may add more use cases example.
 
 Follow the instruction in [here](https://github.com/mrkazawa/agent_node/tree/master/src/actors/rental_car) to run the Rental Car scenario.
